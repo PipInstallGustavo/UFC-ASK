@@ -1,5 +1,5 @@
 .env
 UFC_ASK_API/__pycache__
-eng_soft_rag
+eng_soft
 UFC_ASK_API/key_service_doc
 gemini_credentials.json
