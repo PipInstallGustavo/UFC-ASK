@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 from .rag import split_docs, index_docs, retrieve_docs, answer_question, splitter, vector_store
-from .verify_token import verify_token
+from .verify_token import verify_token, require_role
 
 # Usando a chave de api do google ai studio
 load_dotenv()
@@ -30,21 +30,6 @@ class URLsRequest(BaseModel):
 
 class PDFsRequest(BaseModel):
     filepaths: List[str]
-
-# # Lifespan
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     print("Inicializando documentos e Vector Store")
-#     try:
-#         docs = initialize_documents()
-#         chunks = split_docs(docs)
-#         index_docs(chunks)
-#         print(f"Inicialização completa. carregados {len(chunks)} chunks.")
-#     except Exception as e:
-#         print(f"Inicialização falhou {str(e)}")
-#         raise
-#     yield
-#     print("Fechando...")
     
 
 # Helper functions
@@ -76,14 +61,10 @@ async def root():
     return {
         "message": "UFC Student Assistant API",
         "status": "running",
-        "endpoints": {
-            "/ask": "POST with question to get answers",
-            "/health": "GET to check API status"
-        }
     }
 
 @app.post("/ask", response_model=AnswerResponse)
-async def ask_question(request: QuestionRequest):
+async def ask_question(request: QuestionRequest, payload: dict = Depends(require_role(['admin','estudante']))):
     try:
         related_docs = retrieve_docs(request.question)
         ans = answer_question(request.question, related_docs)
@@ -96,13 +77,13 @@ async def ask_question(request: QuestionRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/add/urls")
-def add_urls(req: URLsRequest, payload: dict = Depends(verify_token)):
+def add_urls(req: URLsRequest, payload: dict = Depends(require_role(['admin']))):
     results = []
     for url in req.urls:
         try:
             loader = WebBaseLoader(url)
             docs = loader.load()  # Isso retorna uma lista de Document!
-            vector_store.add_documents(docs)  # Aqui adiciona do jeito certo!
+            vector_store.add_documents(docs)  # adiciona no vector store
             results.append({"url": url, "status": "success"})
         except Exception as e:
             results.append({"url": url, "status": f"failed: {str(e)}"})
@@ -110,7 +91,7 @@ def add_urls(req: URLsRequest, payload: dict = Depends(verify_token)):
 
 
 @app.post("/add/pdfs")
-def add_pdfs(req: PDFsRequest,payload: dict = Depends(verify_token)):
+def add_pdfs(req: PDFsRequest,payload: dict = Depends(require_role(['admin']))):
     results = []
     for filepath in req.filepaths:
         try:
@@ -125,33 +106,12 @@ def add_pdfs(req: PDFsRequest,payload: dict = Depends(verify_token)):
             results.append({"pdf": filepath, "status": f"failed: {str(e)}"})
     return {"results": results}
 
-
-# @app.post("/delete/urls")
-# def delete_urls(req: URLsRequest):
-#     results = []
-#     for url in req.urls:
-#         try:
-#             # Deleta documentos com metadado 'source' igual à url
-#             delete_by_source(url)
-#             results.append({"url": url, "status": "success"})
-#         except Exception as e:
-#             results.append({"url": url, "status": f"failed: {str(e)}"})
-#     return {"results": results}
-
-# @app.delete("/delete/pdf")
-# def delete_pdf(req: PDFsRequest):
-#     try:
-#         delete_by_source(req.filepath)
-#         return {"message": f"Deleted documents from {req.filepath}"}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
 @app.delete("/delete/by-source")
 def delete_by_source(
     source: str = Body(..., embed=True, description="Source URL or filepath to delete"),
-    payload: dict = Depends(verify_token)
+    payload: dict = Depends(require_role(['admin']))
 ):
-    """Delete all documents from a specific source"""
+    '''Deleta o documento'''
     try:
         ids_to_delete = []
         for doc_id, doc in vector_store.store.items():
@@ -171,8 +131,8 @@ def delete_by_source(
         return {"error": str(e)}
 
 @app.get("/list-sources")
-def list_sources(payload: dict = Depends(verify_token)):
-    """List all document sources in the vector store"""
+def list_sources(payload: dict = Depends(require_role(['admin']))):
+    """Lista todos os documentos do Vector Store"""
     try:
         sources = set()
         for doc in vector_store.store.values():
@@ -185,8 +145,8 @@ def list_sources(payload: dict = Depends(verify_token)):
         return {"error": str(e)}
 
 @app.get("/count-documents")
-def count_documents(source: str = None,payload: dict = Depends(verify_token)):
-    """Count documents, optionally filtered by source"""
+def count_documents(source: str = None,payload: dict = Depends(require_role(['admin']))):
+    '''Conta todos os documentos disponíveis no vector store'''
     try:
         count = 0
         for doc in vector_store.store.values():
@@ -202,7 +162,8 @@ def count_documents(source: str = None,payload: dict = Depends(verify_token)):
 
   
 @app.post("/reset")
-def reset_vector_store(payload: dict = Depends(verify_token)):
+def reset_vector_store(payload: dict = Depends(require_role(['admin']))):
+    '''Reseta o vector store'''
     global vector_store
     vector_store = vector_store
     return {"status": "vector store resetado com sucesso"}
