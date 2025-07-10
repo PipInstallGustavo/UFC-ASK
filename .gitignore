@@ -1,6 +1,12 @@
 .env
-UFC_ASK_API/__pycache__
 eng_soft
-UFC_ASK_API/key_service_doc
+
 gemini_credentials.json
 generate_token.py 
+
+ufc_ask/application/__pycache__
+ufc_ask/infrastructure/context/__pycache__
+ufc_ask/infrastructure/llm/__pycache__
+ufc_ask/infrastructure/vector/__pycache__
+ufc_ask/interface/__pycache__
+ufc_ask/interface/api/__pycache__

@@ -4,13 +4,11 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import os
 from typing import List
 
-#mesma chave secreta usada no Node.js
 SECRET_KEY = os.getenv("SECRET_KEY") 
-ALGORITHM = os.getenv("ALG")  # mesmo usado na aplicação Node.js
+ALGORITHM = os.getenv("ALG")  
 
 security = HTTPBearer()
 
-#verificar se o token é válido
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     try:
@@ -19,10 +17,9 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid or expired token",
+            detail="Token Inválido ou Expirado.",
         )
 
-#verificar o role do usuário para permissões e segurança de rotas
 def require_role(roles: List[str]):
     def role_checker(payload: dict = Depends(verify_token)):
         user_role = payload.get("role")
