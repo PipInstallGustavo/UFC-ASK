@@ -4,10 +4,10 @@ from typing import List, Optional
 
 from langchain_community.document_loaders import PDFPlumberLoader, WebBaseLoader
 
-from application.rag_service import RAGService
-from infrastructure.vector.in_memory_store import InMemoryStore
-from infrastructure.llm.gemini_llm import GeminiLLM
-from infrastructure.context.prompt_builder import PromptBuilder
+from ufc_ask.application.rag_service import RAGService
+from ufc_ask.infrastructure.vector.in_memory_store import InMemoryStore
+from ufc_ask.infrastructure.llm.gemini_llm import GeminiLLM
+from ufc_ask.infrastructure.context.prompt_builder import PromptBuilder
 from .auth import require_role
 
 import os
