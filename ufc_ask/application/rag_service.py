@@ -13,18 +13,16 @@ class RAGService:
         prompt = self.prompt_builder.build_prompt(question, docs)
         answer = self.llm.generate(prompt)
 
-        # converter para string se necessário
         if hasattr(answer, "content"):
             answer = answer.content
         else:
             answer = str(answer)
         print("DEBUG >>>", type(answer), answer)
 
-
         return {
             "question": question,
             "answer": answer,
-            "context_sources": [doc.metadata.get("source", "unknown") for doc in docs]
+            "context_sources": list({doc.metadata.get("source", "unknown") for doc in docs})
         }
 
     def add_documents(self, docs):
@@ -36,5 +34,5 @@ class RAGService:
     def list_sources(self):
         return self.vector_store.list_sources()
 
-    def count_documents(self, source: str = None):
-        return self.vector_store.count_documents(source)
+    def count_documents(self):
+        return self.vector_store.count_documents()

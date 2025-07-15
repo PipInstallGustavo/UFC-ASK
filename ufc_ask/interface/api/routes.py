@@ -5,7 +5,7 @@ from typing import List, Optional
 from langchain_community.document_loaders import PDFPlumberLoader, WebBaseLoader
 
 from ufc_ask.application.rag_service import RAGService
-from ufc_ask.infrastructure.vector.in_memory_store import InMemoryStore
+from ufc_ask.infrastructure.vector.chroma_store import PersistentChromaStore
 from ufc_ask.infrastructure.llm.gemini_llm import GeminiLLM
 from ufc_ask.infrastructure.context.prompt_builder import PromptBuilder
 from .auth import require_role
@@ -31,7 +31,7 @@ class PDFsRequest(BaseModel):
 # === Init ===
 
 router = APIRouter()
-rag = RAGService(InMemoryStore(), GeminiLLM(), PromptBuilder())
+rag = RAGService(PersistentChromaStore(), GeminiLLM(), PromptBuilder())
 
 # === Routes ===
 
@@ -98,9 +98,13 @@ def list_sources(payload: dict = Depends(require_role(['admin']))):
 
 
 @router.get("/count-documents")
-def count_documents(source: str = None, payload: dict = Depends(require_role(['admin']))):
+def count_documents(payload: dict = Depends(require_role(['admin']))):
     try:
-        return {"Quantidade total de documentos": rag.count_documents(source)}
+        return {"Quantidade total de documentos": rag.count_documents()}
+        #                                      👆 must include parentheses to call
     except Exception as e:
         return {"error": str(e)}
+
+
+
 

@@ -1,6 +1,10 @@
 .env
 eng_soft
 
+vector_db
+
+urls.json
+
 gemini_credentials.json
 generate_token.py 
 
