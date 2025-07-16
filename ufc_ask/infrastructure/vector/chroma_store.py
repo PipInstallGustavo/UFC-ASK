@@ -19,6 +19,8 @@ class PersistentChromaStore:
 
     def add_documents(self, docs: List[Document]):
         self._index.add_documents(docs)
+        metadatas = [doc.metadata for doc in docs]
+        print("metadatas: ",metadatas)
         self._index.persist()
 
     def similarity_search(self, query: str, k: int = 3):
@@ -42,12 +44,25 @@ class PersistentChromaStore:
 
     def list_sources(self):
         result = self._index.get()
-        metadatas = result.get("metadatas", [])
-        unique_sources = set()
+        # print("DEBUG metadatas:", result)
+        # print("DEBUG metadatas:", result['metadatas'])
+        metadatas = result['metadatas']
+        unique_sources = {}
+
         for meta in metadatas:
-            if "parent_doc" in meta:
-                unique_sources.add(meta["parent_doc"])
-            elif "source" in meta:
-                unique_sources.add(meta["source"])
-        return list(unique_sources)
+            # print("debug: ", meta)
+            source = meta.get('source', [])
+            print("source: ", source)
+            user = meta.get('user', [])
+            print("user: ", user)
+            insertion_time = meta.get('data_insercao', [])
+            print("data_insercao: ", insertion_time)
+
+            if source:
+                unique_sources[source] = {
+                    "source": source,
+                    "user": user,
+                    "insertion_time": insertion_time
+                }
+        return list(unique_sources.values())
 
