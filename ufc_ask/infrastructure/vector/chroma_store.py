@@ -57,12 +57,13 @@ class PersistentChromaStore:
             print("user: ", user)
             insertion_time = meta.get('data_insercao', [])
             print("data_insercao: ", insertion_time)
-
+            tipo = meta.get('tipo', "")
             if source:
                 unique_sources[source] = {
                     "source": source,
                     "user": user,
-                    "insertion_time": insertion_time
+                    "insertion_time": insertion_time,
+                    "tipo": tipo
                 }
         return list(unique_sources.values())
 

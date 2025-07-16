@@ -73,6 +73,7 @@ def add_urls(req: URLsRequest, payload: dict = Depends(require_role(['admin'])))
                 doc.metadata["source"] = url
                 doc.metadata["user"] = payload["sub"]
                 doc.metadata["data_insercao"] = data_insercao
+                doc.metadata["tipo"] = "url"
             rag.add_documents(docs)
             results.append({
                 "url": url,
@@ -126,6 +127,7 @@ def add_pdfs(req: PDFsRequest, payload: dict = Depends(require_role(['admin'])))
                 doc.metadata["source"] = filename
                 doc.metadata["user"] = payload["sub"]
                 doc.metadata["data_insercao"] = data_adicao
+                doc.metadata["tipo"] = "pdf"
 
             rag.add_documents(docs)
             results.append({
