@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException,UploadFile, File
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -13,6 +13,9 @@ from .auth import require_role
 import os
 
 from datetime import datetime
+import pytz
+
+fuso_brasilia = pytz.timezone("America/Sao_Paulo")
 
 # === Request/Response Schemas ===
 
@@ -26,9 +29,6 @@ class AnswerResponse(BaseModel):
 
 class URLsRequest(BaseModel):
     urls: List[str]
-
-class PDFsRequest(BaseModel):
-    filepaths: List[str]
 
 # === Init ===
 
@@ -45,22 +45,6 @@ def ask_question(request: QuestionRequest, payload: dict = Depends(require_role(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.post("/add/urls")
-# def add_urls(req: URLsRequest, payload: dict = Depends(require_role(['admin']))):
-#     results = []
-#     for url in req.urls:
-#         data_adicao = None
-#         try:
-#             loader = WebBaseLoader(url)
-#             docs = loader.load()
-#             rag.add_documents(docs)
-#             data_adicao = datetime.now().strftime("%d/%m/%Y %H:%M")
-#             results.append({"url": url, "status": "success", "data_insercao":data_adicao, "user":payload['sub']  })
-#         except Exception as e:
-#             results.append({"url": url, "status": f"failed: {str(e)}"})
-#     return {"results": results, "Qtd_urls_adicionadas": len(results)}
-
 @router.post("/add/urls")
 def add_urls(req: URLsRequest, payload: dict = Depends(require_role(['admin']))):
     results = []
@@ -68,7 +52,7 @@ def add_urls(req: URLsRequest, payload: dict = Depends(require_role(['admin'])))
         try:
             loader = WebBaseLoader(url)
             docs = loader.load()
-            data_insercao = datetime.now().strftime("%d/%m/%Y %H:%M")
+            data_insercao = datetime.now(fuso_brasilia).strftime("%d/%m/%Y %H:%M")
             for doc in docs:
                 doc.metadata["source"] = url
                 doc.metadata["user"] = payload["sub"]
@@ -86,43 +70,24 @@ def add_urls(req: URLsRequest, payload: dict = Depends(require_role(['admin'])))
     return {"results": results, "Qtd_urls_adicionadas": len(results)}
 
 
-# @router.post("/add/pdfs")
-# def add_pdfs(req: PDFsRequest, payload: dict = Depends(require_role(['admin']))):
-#     results = []
-#     data_insercao = None
-#     for filepath in req.filepaths:
-#         try:
-#             if not os.path.isfile(filepath):
-#                 raise FileNotFoundError(f"Arquivo não encontrado: {filepath}")
-
-#             loader = PDFPlumberLoader(filepath)
-#             docs = loader.load()
-
-#             # usa apenas o nome do arquivo como metadado visível
-#             filename = os.path.basename(filepath)
-#             for doc in docs:
-#                 doc.metadata["source"] = filename
-
-#             rag.add_documents(docs)
-#             data_adicao = datetime.now().strftime("%d/%m/%Y %H:%M")
-#             results.append({"pdf": filename, "status": "adicionado", "user": payload['sub'], "data_adicao": data_adicao})
-#         except Exception as e:
-#             results.append({"pdf": filepath, "status": f"falhou: {str(e)}"})
-#     return {"results": results, "qtd_pdfs_adicionados": len(results)}
-
 @router.post("/add/pdfs")
-def add_pdfs(req: PDFsRequest, payload: dict = Depends(require_role(['admin']))):
+async def add_pdfs(files: List[UploadFile] = File(...), payload: dict = Depends(require_role(['admin']))):
     results = []
-    for filepath in req.filepaths:
+    for uploaded_file in files:
         try:
-            if not os.path.isfile(filepath):
-                raise FileNotFoundError(f"Arquivo não encontrado: {filepath}")
+            # Salva temporariamente o PDF
+            contents = await uploaded_file.read()
+            temp_path = f"/tmp/{uploaded_file.filename}"
+            with open(temp_path, "wb") as f:
+                f.write(contents)
 
-            loader = PDFPlumberLoader(filepath)
+            # Carrega o conteúdo do PDF
+            loader = PDFPlumberLoader(temp_path)
             docs = loader.load()
 
-            filename = os.path.basename(filepath)
-            data_adicao = datetime.now().strftime("%d/%m/%Y %H:%M")
+            # Metadados
+            filename = uploaded_file.filename
+            data_adicao = datetime.now(fuso_brasilia).strftime("%d/%m/%Y %H:%M")
             for doc in docs:
                 doc.metadata["source"] = filename
                 doc.metadata["user"] = payload["sub"]
@@ -130,14 +95,22 @@ def add_pdfs(req: PDFsRequest, payload: dict = Depends(require_role(['admin'])))
                 doc.metadata["tipo"] = "pdf"
 
             rag.add_documents(docs)
+
             results.append({
                 "pdf": filename,
                 "status": "adicionado",
                 "user": payload["sub"],
                 "data_adicao": data_adicao
             })
+
+            os.remove(temp_path)
+
         except Exception as e:
-            results.append({"pdf": filepath, "status": f"falhou: {str(e)}"})
+            results.append({
+                "pdf": uploaded_file.filename,
+                "status": f"falhou: {str(e)}"
+            })
+
     return {"results": results, "qtd_pdfs_adicionados": len(results)}
 
 
