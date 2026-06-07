@@ -5,10 +5,16 @@ from langchain.docstore.document import Document
 from typing import List
 import os
 
+from dotenv import load_dotenv
+load_dotenv()
+
 class PersistentChromaStore:
     def __init__(self, persist_directory="vector_db", collection_name="default"):
-        self._embedding_function = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        # self._embedding_function = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        self._embedding_function = GoogleGenerativeAIEmbeddings(
+            model="models/gemini-embedding-001",
+            google_api_key=os.getenv("GOOGLE_API_KEY")
+        )
+        # self._embedding_function = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
         self._persist_directory = persist_directory
         self._collection_name = collection_name
         self._index = Chroma(

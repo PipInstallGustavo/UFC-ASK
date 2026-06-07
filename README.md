@@ -25,8 +25,8 @@ Esta API serve como o *backend* para a aplicação cliente do chatbot UFC-ASK, q
 
 * **Linguagem Principal:** Python
 * **Framework Web:** FastAPI
-* **Base de Dados:** InMemoryVectorStore
-* **Modelo de Linguagem (LLM):** Gemini-2.0-Flash (Google AI)
+* **Base de Dados:** ChromaDB
+* **Modelo de Linguagem (LLM):** gemini-2.5-flash (Google AI)
 * **Outras Bibliotecas/Ferramentas:** LangChain
 
 ---

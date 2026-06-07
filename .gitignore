@@ -1,6 +1,8 @@
 .env
 eng_soft
 
+pdfs/
+
 vector_db
 
 urls.json
@@ -14,3 +16,5 @@ ufc_ask/infrastructure/llm/__pycache__
 ufc_ask/infrastructure/vector/__pycache__
 ufc_ask/interface/__pycache__
 ufc_ask/interface/api/__pycache__
+
+testes/

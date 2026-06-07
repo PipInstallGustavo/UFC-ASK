@@ -4,7 +4,7 @@ from langchain_core.messages import AIMessage
 #LLM usada
 class GeminiLLM:
     def __init__(self):
-        self.model = ChatGoogleGenerativeAI(model="gemini-2.0-flash", convert_system_message_to_human=True)
+        self.model = ChatGoogleGenerativeAI(model="gemini-2.5-flash", convert_system_message_to_human=True)
 
     def generate(self, prompt: str) -> str:
         try:
