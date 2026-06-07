@@ -83,9 +83,40 @@ Certifique-se de ter o seguinte instalado:
 Com as dependências instaladas e o ambiente virtual ativado, você pode iniciar a API:
 
 ```bash
-  uvicorn ufc_ask.interface.main:app --reload --host 0.0.0.0 --port 3000
+uvicorn ufc_ask.interface.main:app --reload --host 0.0.0.0 --port 3000
 ```
 
+---
 
+### Rodando com Docker (Alternativa Recomendada)
 
+Se você preferir rodar a aplicação usando Docker e Docker Compose, siga as instruções abaixo:
 
+1. **Configuração de Variáveis de Ambiente:**
+   Certifique-se de que o arquivo `.env` está configurado na raiz do projeto (como detalhado na seção de Instalação):
+   ```dotenv
+   GOOGLE_API_KEY="SUA_CHAVE_API_DO_GEMINI"
+   SECRET_KEY="SUA_CHAVE_SECRETA_JWT"
+   ALG="ALGORITMO_JWT"
+   ```
+
+2. **Iniciar o container:**
+   ```bash
+   docker compose up --build
+   ```
+
+Isso irá:
+- Construir a imagem Docker do zero.
+- Instalar todas as dependências do `requirements.txt`.
+- Expor a porta `3000` (mapeando a porta local `3000` para a porta `3000` do container).
+- Montar a pasta `./vector_db` da sua máquina local no container para que a base do ChromaDB persista entre reinicializações.
+
+Para rodar em segundo plano (background):
+```bash
+docker compose up -d
+```
+
+Para parar os serviços:
+```bash
+docker compose down
+```

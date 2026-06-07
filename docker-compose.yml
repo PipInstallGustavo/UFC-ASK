@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    container_name: ufc-ask-api
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./vector_db:/app/vector_db
+    restart: unless-stopped
