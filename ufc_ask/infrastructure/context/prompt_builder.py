@@ -17,4 +17,3 @@ class PromptBuilder:
         else:
             context = "\n\n".join([doc.page_content for doc in docs])
         return self.TEMPLATE.format(question=question, context=context)
-
